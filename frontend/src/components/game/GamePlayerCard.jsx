@@ -1,8 +1,8 @@
 const Cards = ({cards, isSelf}) => {
     let res = "";
     if (isSelf) {
-        cards.map(card => {
-            res += card + " ";
+        res += cards.map(card => {
+            return card + " ";
         })
     } else {
         res = "? ";

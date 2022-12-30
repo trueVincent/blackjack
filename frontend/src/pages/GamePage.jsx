@@ -20,6 +20,7 @@ const GamePage = () => {
         game.gameEnd(() => {
             return nav("/result");
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
