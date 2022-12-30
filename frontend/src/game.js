@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:8000/");
+const socket = io("http://35.209.67.28/");
 
 let loginCb = () => {};
 const login = (name, cb) => {

@@ -8,7 +8,7 @@ sio = socketio.Server(async_mode='eventlet', cors_allowed_origins="*")
 app = socketio.WSGIApp(sio, static_files={
     '/': './public/'
 })
-# Command to start server: gunicorn -k eventlet -w 1 --reload app:app
+# Command to start server: gunicorn -b 0.0.0.0:80 -k eventlet -w 1 --reload app:app
 # Or gunicorn --reload --threads 50 app:app
 
 GAME_ID = 0
