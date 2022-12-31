@@ -1,9 +1,9 @@
 const Cards = ({cards, isSelf}) => {
     let res = "";
     if (isSelf) {
-        res += cards.map(card => {
-            return card + " ";
-        })
+        for (let i = 0; i < cards.length; i++) {
+            res += cards[i] + " ";
+        }
     } else {
         res = "? ";
         for (let i = 1; i < cards.length; i++) {
