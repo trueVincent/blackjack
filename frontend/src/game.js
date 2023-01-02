@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
 
 // const socket = io("http://localhost/");
-const socket = io("http://35.209.67.28/");
+const socket = io("https://blackjackvincent.tk/");
 
 let loginCb = () => {};
 const login = (name, cb) => {

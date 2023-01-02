@@ -8,16 +8,50 @@ services:
 
    nginx:
       build: ./compose/nginx
-      volumes:
-         - ./compose/nginx/ssl:/usr/share/nginx/ssl # 挂载ssl证书目录
+      # volumes:
+      #    - ./compose/nginx/ssl:/usr/share/nginx/ssl # 挂载ssl证书目录
       depends_on:
          - web
       restart: always
+      environment:
+         - VIRTUAL_HOST=blackjackvincent.tk,www.blackjackvincent.tk
+         - VIRTUAL_NETWORK=nginx-proxy
+         - VIRTUAL_PORT=80
+         - LETSENCRYPT_HOST=blackjackvincent.tk,www.blackjackvincent.tk
+         - LETSENCRYPT_EMAIL=v39215068@gmail.com
+
+   nginx-proxy:
+      image: jwilder/nginx-proxy:alpine
+      restart: always
+      container_name: nginx-proxy
       ports:
          - "80:80"
-      # environment:
-      #    - VIRTUAL_HOST=957tw.com,www.957tw.com
-      #    - VIRTUAL_NETWORK=nginx-proxy
-      #    - VIRTUAL_PORT=80
-         # - LETSENCRYPT_HOST=957tw.com,www.957tw.com
-         # - LETSENCRYPT_EMAIL=your_mail@gmail.com
+         - "443:443"
+      volumes:
+         - /var/run/docker.sock:/tmp/docker.sock:ro
+         - html:/usr/share/nginx/html
+         - dhparam:/etc/nginx/dhparam
+         - vhost:/etc/nginx/vhost.d
+         - certs:/etc/nginx/certs:ro
+
+   nginx-proxy-letsencrypt:
+      image: jrcs/letsencrypt-nginx-proxy-companion
+      restart: always
+      depends_on:
+         - "nginx-proxy"
+      volumes:
+         - certs:/etc/nginx/certs
+         - vhost:/etc/nginx/vhost.d
+         - html:/usr/share/nginx/html
+         - /var/run/docker.sock:/var/run/docker.sock:ro
+         - acme:/etc/acme.sh
+      environment:
+         - NGINX_PROXY_CONTAINER=nginx-proxy
+         - DEFAULT_EMAIL=v39215068@gmail.com
+
+volumes: # 自定义数据卷，位于宿主机/var/lib/docker/volumes内
+   certs:
+   vhost:
+   html:
+   dhparam:
+   acme:
