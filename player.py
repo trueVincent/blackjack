@@ -1,13 +1,13 @@
-class Player:
+from shared import db
+
+
+class Player(db.Base):
+    __tablename__ = "player"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, unique=True)
+    points = db.Column(db.Integer)
+
     def __init__(self, name):
-        self.id = 0  # TODO: should be unique, should't be sid
         self.name = name
         self.points = 10000
-        self.current_game = None
-        self.current_bet = None
-
-    def again(self):
-        pass
-
-    def leave(self):
-        pass

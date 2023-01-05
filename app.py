@@ -1,5 +1,6 @@
 import socketio
 
+from shared import db  # init first
 from game import Game
 from player import Player
 from bet import Bet
@@ -9,19 +10,17 @@ app = socketio.WSGIApp(sio, static_files={
     '/': './public/'
 })
 # Command to start server: gunicorn -b 0.0.0.0:80 -k eventlet -w 1 --reload app:app
-# Or gunicorn --reload --threads 50 app:app
 
-GAME_ID = 0
-GAME = Game(GAME_ID)
-PLAYER_MAP = {}  # name: player
+GAME = Game()
+GAME.add()
 BET_MAP = {}  # sid: bet
 
 # FIX: 斷線處理
 
 def create_game():
-    global GAME_ID, GAME
-    GAME_ID += 1
-    GAME = Game(GAME_ID)
+    global GAME
+    GAME = Game()
+    GAME.add()
 
 @sio.event
 def create_player(sid, name):
@@ -30,9 +29,10 @@ def create_player(sid, name):
         "points": 0,
         "success": False
     }
-    if name not in PLAYER_MAP:
+    stmt = db.select(Player).where(Player.name == name)
+    if not db.get(stmt):
         player = Player(name)
-        PLAYER_MAP[name] = player
+        player.add()
         payload["name"] = name
         payload["points"] = player.points
         payload["success"] = True
@@ -45,8 +45,9 @@ def get_player(sid, name):
         "points": 0,
         "success": False
     }
-    if name in PLAYER_MAP:
-        player = PLAYER_MAP[name]
+    stmt = db.select(Player).where(Player.name == name)
+    player = db.get(stmt)
+    if player:
         payload["name"] = name
         payload["points"] = player.points
         payload["success"] = True
@@ -63,22 +64,20 @@ def join_game(sid):
     if GAME.is_full():
         create_game()
     name = sio.get_session(sid)["name"]
-    player = PLAYER_MAP[name]
+    stmt = db.select(Player).where(Player.name == name)
+    player = db.get(stmt)
     bet = Bet(GAME, player)
-    player.current_game = GAME
-    player.current_bet = bet
+    bet.add()
     BET_MAP[sid] = bet
-    GAME.add_bet(bet)
-    sio.enter_room(sid, GAME_ID)
+    sio.enter_room(sid, GAME.id)
     sio.emit("join_game_result", to=sid)
 
     payload = GAME.get_waiting_room_details()
-    sio.emit("get_waiting_room_details", payload, room=GAME_ID)
+    sio.emit("get_waiting_room_details", payload, room=GAME.id)
 
 @sio.event
 def get_waiting_room_details(sid):
-    bet = BET_MAP[sid]
-    game = bet.game
+    game = BET_MAP[sid].game
     payload = game.get_waiting_room_details()
     sio.emit("get_waiting_room_details", payload, to=sid)
 
@@ -96,11 +95,12 @@ def be_dealer(sid):
 @sio.event
 def start_game(sid):
     game = BET_MAP[sid].game
-    res = game.start()
-    sio.emit("start_game_result", res, to=sid)
-
-    if res:
+    try:
+        game.start()
+        sio.emit("start_game_result", True, to=sid)
         sio.emit("wait_game_start", room=game.id)
+    except:
+        sio.emit("start_game_result", False, to=sid)
 
 @sio.event
 def get_game_detail(sid):

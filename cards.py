@@ -8,8 +8,8 @@ class Odds:
     five_cards = 3
 
 class Cards:
-    def __init__(self):
-        self.cards = []
+    def __init__(self, cards):
+        self.cards = cards
 
     def set_deck_of_cards(self):
         for _ in range(4):
@@ -47,7 +47,7 @@ class Cards:
             return Odds.straight
         return 1
 
-    def get_random_card(self):
+    def draw_random_card(self):
         card = random.choice(self.cards)
         self.cards.remove(card)
         return card

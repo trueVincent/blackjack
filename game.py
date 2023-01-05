@@ -1,61 +1,75 @@
 from cards import Cards
+from shared import db
 
 
 class GameStatus:
     waiting = 0
-    starting = 1
-    playerSpecialActing = 2
-    playerCalling = 3
-    dealerCalling = 4
-    ending = 5
+    playerSpecialActing = 1
+    playerCalling = 2
+    dealerCalling = 3
+    ending = 4
 
 
-class Game:
+class Game(db.Base):
+    __tablename__ = "game"
+
+    id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.Integer, default=GameStatus.waiting)
+    cards = db.Column(db.PickleType)
+
+    bets = db.orm.relationship("Bet", back_populates="game")
+
     MAX_PLAYER_NUM = 6
 
-    def __init__(self, id):
-        self.id = id
-        self.status = GameStatus.waiting
-        self.cards = Cards()
-        self.cards.set_deck_of_cards()
-        self.player_bets = []
-        self.dealer_bet = None
-        self.current_bet = None
+    @property
+    def dealer_bet(self):
+        for bet in self.bets:
+            if bet.is_dealer: return bet
+
+    @property
+    def player_bets(self):
+        return [bet for bet in self.bets if not bet.is_dealer]
+
+    @property
+    def current_bet(self):
+        for bet in self.bets:
+            if bet.is_current: return bet
+
+    def __init__(self):
+        cards = Cards([])
+        cards.set_deck_of_cards()
+        self.cards = cards.cards
+
+    def can_start(self):
+        return self.dealer_bet and len(self.bets) >= 2
 
     def start(self):
-        def can_start():
-            return self.dealer_bet and self.player_bets
-
-        if not can_start():
-            return False
-        self.status = GameStatus.starting
-        for bet in self.player_bets:
-            bet.hit()
-            bet.hit()
-        self.dealer_bet.hit()
-        self.dealer_bet.hit()
+        if not self.can_start():
+            raise Exception("Need a dealer and at least a player to start the game.")
+        [bet.hit() for bet in self.bets]
         self.next_bet()
         self.status = GameStatus.playerCalling
-        return True
+        self.add()
 
     def close(self):
-        self.current_bet = None
-        dealer_cards_sum = self.dealer_bet.cards.sum()
-        dealer_cards_len = len(self.dealer_bet.cards.cards)
+        dealer_cards = Cards(self.dealer_bet.cards)
+        dealer_cards_sum = dealer_cards.sum()
+        dealer_cards_len = len(dealer_cards.cards)
         for bet in self.player_bets:
-            player_cards_sum = bet.cards.sum()
-            player_cards_len = len(bet.cards.cards)
+            player_cards = Cards(bet.cards)
+            player_cards_sum = player_cards.sum()
+            player_cards_len = len(player_cards.cards)
 
             if (dealer_cards_sum > 21 and player_cards_sum > 21) or (dealer_cards_sum == player_cards_sum) or (dealer_cards_len >= 5 and player_cards_len >= 5):
                 odds = 0
             elif dealer_cards_sum > 21 or player_cards_len >= 5:
-                odds = bet.cards.get_odds()
+                odds = player_cards.get_odds()
             elif player_cards_sum > 21 or dealer_cards_len >= 5:
-                odds = -self.dealer_bet.cards.get_odds()
+                odds = -dealer_cards.get_odds()
             elif dealer_cards_sum > player_cards_sum:
-                odds = -self.dealer_bet.cards.get_odds()
+                odds = -dealer_cards.get_odds()
             elif dealer_cards_sum < player_cards_sum:
-                odds = bet.cards.get_odds()
+                odds = player_cards.get_odds()
 
             self.dealer_bet.balance += bet.points * -odds
             self.dealer_bet.player.points += bet.points * -odds
@@ -63,19 +77,25 @@ class Game:
             bet.player.points += bet.points * odds
 
         self.status = GameStatus.ending
+        self.add()
+        db.add_all(self.bets)
 
     def hit(self):
-        return self.cards.get_random_card()
+        cards = Cards(self.cards)
+        card = cards.draw_random_card()
+        self.cards = cards.cards
+        self.add()
+        return card
 
     def add_bet(self, bet):
-        if self.status == GameStatus.waiting and len(self.player_bets) <= self.MAX_PLAYER_NUM:
-            self.player_bets.append(bet)
+        if self.status == GameStatus.waiting and len(self.bets) <= self.MAX_PLAYER_NUM:
+            self.bets.append(bet)
             return True
         else:
             return False
 
     def is_full(self):
-        if self.status != GameStatus.waiting or len(self.player_bets) >= self.MAX_PLAYER_NUM:
+        if self.status != GameStatus.waiting or len(self.bets) >= self.MAX_PLAYER_NUM:
             return True
         return False
 
@@ -84,17 +104,24 @@ class Game:
             return False
         self.dealer_bet = bet
         self.player_bets.remove(bet)
+        self.add()
         return True
+
+    def is_last_bet(self):
+        return self.current_bet == self.dealer_bet
 
     def next_bet(self):
         if not self.current_bet:
-            self.current_bet = self.player_bets[0]
+            self.player_bets[0].is_current = True
+            self.player_bets[0].add()
             return
         idx = self.player_bets.index(self.current_bet)
         if idx + 1 == len(self.player_bets):
             self.current_bet = self.dealer_bet
             return
-        self.current_bet = self.player_bets[idx + 1]
+        self.player_bets[idx + 1].is_current = True
+        self.player_bets[idx].is_current = False
+        db.add_all(self.player_bets[idx + 1], self.player_bets[idx])
 
     def get_waiting_room_details(self):
         return {
@@ -108,28 +135,25 @@ class Game:
             "dealer": {
                 "name": self.dealer_bet.player.name,
                 "bet": self.dealer_bet.points,
-                "cards": self.dealer_bet.cards.cards,
+                "cards": self.dealer_bet.cards,
                 "cards_sum": self.dealer_bet.cards.sum(),
-                "is_current": self.current_bet == self.dealer_bet,
+                "is_current": self.dealer_bet.is_current,
             },
             "players": [{
                 "name": bet.player.name,
                 "bet": bet.points,
                 "cards": bet.cards.cards,
                 "cards_sum": bet.cards.sum(),
-                "is_current": self.current_bet == bet,
+                "is_current": bet.is_current,
             } for bet in self.player_bets],
         }
-
-    def is_last_bet(self):
-        return self.current_bet == self.dealer_bet
 
     def get_result(self):
         return {
             "dealer": {
                 "name": self.dealer_bet.player.name,
                 "bet": self.dealer_bet.points,
-                "cards": self.dealer_bet.cards.cards,
+                "cards": self.dealer_bet.cards,
                 "balance": self.dealer_bet.balance,
             },
             "players": [{

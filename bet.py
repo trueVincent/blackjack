@@ -1,29 +1,45 @@
 from cards import Cards
+from shared import db
 
 
 BASE_BET = 1000
 
-class Bet:
+class Bet(db.Base):
+    __tablename__ = "bet"
+
+    id = db.Column(db.Integer, primary_key=True)
+    points = db.Column(db.Integer, default=BASE_BET)
+    is_dealer = db.Column(db.Boolean, default=False)
+    is_resign = db.Column(db.Boolean, default=False)
+    is_current = db.Column(db.Boolean, default=False)
+    balance = db.Column(db.Integer, default=0)
+    cards = db.Column(db.PickleType)
+
+    game_id = db.Column(db.Integer, db.ForeignKey("game.id"), nullable=False)
+    game = db.orm.relationship("Game", back_populates="bets")
+
+    player_id = db.Column(db.Integer, db.ForeignKey("player.id"), nullable=False)
+    player = db.orm.relationship("Player")
+
     def __init__(self, game, player):
-        self.id = 0
-        self.points = BASE_BET
-        self.cards = Cards()
-        self.is_dealer = False
-        self.is_resign = False
         self.game = game
         self.player = player
-        self.balance = 0
 
     def be_dealer(self):
-        success = self.game.be_dealer(self)
-        if success:
+        is_success = self.game.be_dealer(self)
+        if is_success:
             self.is_dealer = True
-        return success
+            self.add()
+        return is_success
 
     def resign(self):
         self.is_regisn = True
+        self.add()
 
     def hit(self):
+        cards = Cards(self.cards)
         card = self.game.hit()
-        self.cards.add_card(card)
+        cards.add_card(card)
+        self.cards = cards.cards
+        self.add()
         return card
