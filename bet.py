@@ -1,3 +1,5 @@
+import datetime
+
 from cards import Cards
 from shared import db
 
@@ -13,7 +15,8 @@ class Bet(db.Base):
     is_resign = db.Column(db.Boolean, default=False)
     is_current = db.Column(db.Boolean, default=False)
     balance = db.Column(db.Integer, default=0)
-    cards = db.Column(db.PickleType)
+    cards = db.Column(db.MutableList.as_mutable(db.PickleType), default=[])
+    created_time = db.Column(db.DateTime, default=datetime.datetime.now())
 
     game_id = db.Column(db.Integer, db.ForeignKey("game.id"), nullable=False)
     game = db.orm.relationship("Game", back_populates="bets")
@@ -24,13 +27,13 @@ class Bet(db.Base):
     def __init__(self, game, player):
         self.game = game
         self.player = player
+        self.cards = []
 
     def be_dealer(self):
-        is_success = self.game.be_dealer(self)
-        if is_success:
-            self.is_dealer = True
-            self.add()
-        return is_success
+        if self.game.dealer_bet:
+            return False
+        self.is_dealer = True
+        return True
 
     def resign(self):
         self.is_regisn = True
@@ -41,5 +44,4 @@ class Bet(db.Base):
         card = self.game.hit()
         cards.add_card(card)
         self.cards = cards.cards
-        self.add()
         return card

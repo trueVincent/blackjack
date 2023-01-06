@@ -1,5 +1,6 @@
 from sqlalchemy import orm, create_engine, types
 from sqlalchemy import *
+from sqlalchemy.ext.mutable import MutableList
 
 class _Base(object):
     def add(self):
@@ -8,7 +9,7 @@ class _Base(object):
             session.commit()
 
 Base = orm.declarative_base(cls=_Base)
-engine = create_engine("sqlite:///storage/test.db", echo=True, future=True)  # TODO: don't use memory-only DB
+engine = create_engine("sqlite:///storage/test.db", echo=False, future=True)  # TODO: don't use memory-only DB
 
 def add_all(entities):
     with orm.Session(engine) as session:
@@ -18,6 +19,11 @@ def add_all(entities):
 def get(stmt):
     with orm.Session(engine) as session:
         return session.scalars(stmt)
+
+def create_session():
+    Session = orm.sessionmaker(bind=engine)
+    session = Session()
+    return session
 
 # init
 from bet import Bet
