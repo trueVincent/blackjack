@@ -16,11 +16,17 @@ GAME_ID = -1
 BET_MAP = {}  # sid: bet
 
 # FIX: 斷線處理
+# FIX: 點數計算錯誤
 # TODO: 封裝 DB layer，處理 DB session 連線太亂
 
 def create_game():
     global GAME_ID
     GAME_ID = Game().add()
+
+@sio.event
+def disconnect(sid):
+    if hasattr(BET_MAP, sid):
+        del BET_MAP[sid]
 
 @sio.event
 def create_player(sid, name):
@@ -182,3 +188,10 @@ def get_result(sid):
     payload = game.get_result()
     sio.emit("get_result", payload, to=sid)
     session.close()
+
+@sio.event
+def get_points(sid):
+    session = db.create_session()
+    name = sio.get_session(sid)["name"]
+    player = session.query(Player).filter_by(name=name).first()
+    sio.emit("get_points", player.points, to=sid)

@@ -123,5 +123,13 @@ socket.on("get_result", (arg) => {
     getGameResultCb(arg.dealer, arg.players);
 })
 
+let getPointsCb = () => {};
+const getPoints = (cb) => {
+    getPointsCb = cb;
+    socket.emit("get_points");
+}
+socket.on("get_points", (points) => {
+    getPointsCb(points);
+})
 
-export { login, register, join, logout, getWaitingRoomDetails, beDealer, startGame, waitGameStart, getGameDetail, hit, stand, gameEnd, getGameResult }
+export { login, register, join, logout, getWaitingRoomDetails, beDealer, startGame, waitGameStart, getGameDetail, hit, stand, gameEnd, getGameResult, getPoints }
