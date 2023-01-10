@@ -1,7 +1,12 @@
 import { io } from "socket.io-client";
 
-// const socket = io("http://localhost/");
-const socket = io("https://blackjackvincent.tk/");
+let domain = "";
+if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    domain = "http://localhost/";
+} else {
+    domain = "https://blackjackvincent.tk/"
+}
+const socket = io(domain);
 
 let loginCb = () => {};
 const login = (name, cb) => {

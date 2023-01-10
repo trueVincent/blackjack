@@ -129,7 +129,6 @@ def start_game(sid):
         sio.emit("start_game_result", False, to=sid)
     session.close()
 
-# keep doing from here
 @sio.event
 def get_game_detail(sid):
     session = db.create_session()
