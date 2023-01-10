@@ -13,54 +13,24 @@ const GamePage = () => {
     const nav = useNavigate();
     const name = sessionStorage.getItem("name");
 
-    let timeoutId = -1;
-    let intervalId = -1;
-    const [countdownSec, setCountdownSec] = useState(10);
-
     useEffect(() => {
-        game.getGameDetail((dealer_, players) => {
+        game.getGameDetail((dealer, players) => {
             setPlayers(players);
-            setDelaer(dealer_);
-            const isCurrent = isCurrentFn(name, dealer_, players);
-            setIsCurrent(isCurrent);
-            if (isCurrent) {setCountdown(isDealer(name, dealer_.name))};
+            setDelaer(dealer);
+            setIsCurrent(isCurrentFn(name, dealer, players));
         });
 
         game.gameEnd(() => {
-            clearCountdown();
             return nav("/result");
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const setCountdown = (isDealer) => {
-        clearCountdown();
-
-        timeoutId = setTimeout(() => {
-            if (isDealer) {
-                game.hit();
-                setCountdown(isDealer);
-            } else {
-                game.stand();
-                clearCountdown();
-            }
-        }, 10000);
-        intervalId = setInterval(() => {
-            setCountdownSec(prev => prev > 0 ? prev - 1 : 0);
-        }, 1000);
-    }
-
-    const clearCountdown = () => {
-        clearTimeout(timeoutId);
-        clearInterval(intervalId);
-        setCountdownSec(10);
-    }
-
     return (
         <>
             <div className="fs-1 fw-bold">Game</div>
             <div className={isCurrent ? "" : "d-none"}>
-                Your turn   {countdownSec}
+                Your turn
             </div>
             <div className="row">
                 <div className="col-3">
@@ -72,11 +42,9 @@ const GamePage = () => {
                 <div className="col-6"></div>
                 <div className="col-3">
                     <button className="btn btn-outline-secondary" type="button" disabled={isCurrent ? "" : "1"} onClick={() => {
-                        setCountdown(isDealer(name, dealer.name));
                         game.hit();
                     }}>Hit</button>
                     <button className="btn btn-outline-secondary" type="button" disabled={isCurrent && canDealerStand(name, dealer) ? "" : "1"} onClick={() => {
-                        clearCountdown();
                         game.stand();
                     }}>Stand</button>
                 </div>
