@@ -31,7 +31,7 @@ class Cards:
                 sum += 10
             else:
                 sum += card
-        if has_ace and sum < 11:
+        if has_ace and sum <= 11:
             sum += 10
         return sum
 
