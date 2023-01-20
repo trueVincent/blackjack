@@ -5,6 +5,8 @@ services:
       build: ./
       command: gunicorn -b 0.0.0.0:8000 -k eventlet -w 1 --reload app:app
       restart: always
+      volumes:
+         - db:/blackjack/storage/
 
    nginx:
       build: ./compose/nginx
@@ -55,3 +57,4 @@ volumes: # 自定义数据卷，位于宿主机/var/lib/docker/volumes内
    html:
    dhparam:
    acme:
+   db:
