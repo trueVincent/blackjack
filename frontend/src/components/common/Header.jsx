@@ -9,7 +9,7 @@ const Header = ({ isLogin, setIsLogin }) => {
 
     return (
         <>
-            <div className="d-flex justify-content-end">
+            <div className="d-flex justify-content-end align-items-center bg-light">
                 {isLogin && <div className="me-1">Name: {name}</div>}
                 {isLogin && <button type="button" className="btn btn-outline-secondary me-1" onClick={() => handleLogoutBtnClick(setIsLogin, nav)}>Logout</button>}
                 {isLogin && <button type="button" className="btn btn-outline-secondary" onClick={() => {

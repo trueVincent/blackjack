@@ -26,7 +26,7 @@ const GamePage = () => {
 
     return (
         <>
-            <div className="fs-1 fw-bold">Game</div>
+            <div className="fs-2 fw-bold">Game</div>
             <div className={isCurrent ? "" : "d-none"}>
                 Your turn
             </div>

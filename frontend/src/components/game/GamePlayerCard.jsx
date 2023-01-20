@@ -13,11 +13,10 @@ const GamePlayerCard = ({ name, bet, cards, isCurrent, isSelf }) => {
     
     return (
         <>
-            <div className="border">
+            <div className={isCurrent ? "border border-3 border-primary" : "border"}>
                 <div>Name: {name}</div>
                 <div>Bet: {bet}</div>
                 <div>Cards: {cards && <Cards cards={cards} isSelf={isSelf} />}</div>
-                {isCurrent && <div>Current</div>}
             </div>
         </>
     )

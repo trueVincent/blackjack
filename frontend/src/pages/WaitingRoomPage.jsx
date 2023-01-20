@@ -25,7 +25,7 @@ const WaitingRoomPage = () => {
 
     return (
         <>
-            <div className="fs-1 fw-bold">WaitingRoom</div>
+            <div className="fs-2 fw-bold">WaitingRoom</div>
             <div className="row">
                 <div className="col-3">
                     <div className="fs-3">Dealer</div>

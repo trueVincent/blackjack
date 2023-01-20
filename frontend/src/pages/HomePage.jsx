@@ -8,9 +8,6 @@ const HomePage = ({ isLogin, setIsLogin }) => {
 
     return (
         <>
-            <div className="d-flex justify-content-center">
-                <div className="fs-1 fw-bold">BlackJack</div>
-            </div>
             <div className="d-flex flex-column align-items-center">
                 {!isLogin && <input type="text" className="" placeholder="Name" onInput={(e) => setName(e.target.value)}/>}
                 <div className="mt-2">
