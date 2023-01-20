@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import GamePlayerCard from "../components/game/GamePlayerCard";
 import * as game from "../game";
 
-// TODO: 撲克牌圖片，先用同一花色比較簡單
-// TODO: 點數查詢，用按鈕發 API 查詢透過 popup 顯示，就不用處理 header 即時更新
 
 const GamePage = () => {
     const [players, setPlayers] = useState([]);
@@ -33,13 +31,12 @@ const GamePage = () => {
                 Your turn
             </div>
             <div className="row">
-                <div className="col-3">
+                <div className="col-9">
                     <div className="fs-3">Dealer</div>
-                    <GamePlayerCard name={dealer.name} bet={dealer.bet} cards={dealer.cards} isCurrent={dealer.is_current} isSelf={isSelf(name, dealer.name)} />
+                    {dealer && <GamePlayerCard name={dealer.name} bet={dealer.bet} cards={dealer.cards} isCurrent={dealer.is_current} isSelf={isSelf(name, dealer.name)} />}
                     <div className="fs-3">Players</div>
-                    {players.map(player => { return <GamePlayerCard name={player.name} bet={player.bet} cards={player.cards} isCurrent={player.is_current} isSelf={isSelf(name, player.name)} /> })}
+                    {players && players.map(player => { return <GamePlayerCard name={player.name} bet={player.bet} cards={player.cards} isCurrent={player.is_current} isSelf={isSelf(name, player.name)} /> })}
                 </div>
-                <div className="col-6"></div>
                 <div className="col-3">
                     <button className="btn btn-outline-secondary" type="button" disabled={isCurrent ? "" : "1"} onClick={() => {
                         game.hit();
@@ -62,6 +59,7 @@ const isCurrentFn = (name, dealer, players) => {
 }
 
 const isSelf = (name, bet_name) => {
+    console.log(name, bet_name);
     return name === bet_name;
 }
 

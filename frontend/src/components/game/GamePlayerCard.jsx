@@ -1,16 +1,12 @@
 const Cards = ({cards, isSelf}) => {
-    let res = "";
-    if (isSelf) {
-        for (let i = 0; i < cards.length; i++) {
-            res += cards[i] + " ";
-        }
-    } else {
-        res = "? ";
-        for (let i = 1; i < cards.length; i++) {
-            res += cards[i] + " ";
-        }
+    if (!isSelf) {
+        cards[0] = "back";
     }
-    return (<>{res}</>);
+    return (
+        <>
+            {cards.map(card => { return <img className="d-inline" src={"/images/" + card + ".jpg"} alt={card} width="120" height="180"></img>})}
+        </>
+    )
 }
 
 const GamePlayerCard = ({ name, bet, cards, isCurrent, isSelf }) => {

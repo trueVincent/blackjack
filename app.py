@@ -16,7 +16,6 @@ GAME_ID = -1
 BET_MAP = {}  # sid: bet
 
 # FIX: 斷線處理
-# FIX: 點數計算錯誤
 # TODO: 封裝 DB layer，處理 DB session 連線太亂
 
 def create_game():
