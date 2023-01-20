@@ -9,7 +9,7 @@ class _Base(object):
             session.commit()
 
 Base = orm.declarative_base(cls=_Base)
-engine = create_engine("sqlite:///storage/test.db", echo=False, future=True)  # TODO: don't use memory-only DB
+engine = create_engine("sqlite:///storage/data.db", echo=False, future=True)
 
 def add_all(entities):
     with orm.Session(engine) as session:
