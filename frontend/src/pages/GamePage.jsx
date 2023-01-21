@@ -27,9 +27,7 @@ const GamePage = () => {
     return (
         <>
             <div className="fs-2 fw-bold">Game</div>
-            <div className={isCurrent ? "" : "d-none"}>
-                Your turn
-            </div>
+            <div className="fs-4 text-primary">Current Player: { getCurrentPlayer(dealer, players) }</div>
             <div className="row">
                 <div className="col-9">
                     <div className="fs-3">Dealer</div>
@@ -72,6 +70,16 @@ const canDealerStand = (name, dealer) => {
 
 const isDealer = (name, dealerName) => {
     return name === dealerName;
+}
+
+const getCurrentPlayer = (dealer, players) => {
+    if (dealer && dealer.is_current) { return dealer.name; }
+    if (players) {
+        for (let i = 0; i < players.length; i++) {
+            if (players[i].is_current) { return players[i].name; }
+        }
+    }
+    return "";
 }
 
 export default GamePage;
